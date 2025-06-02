@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Resume Chat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-image: url("{{ url_for('static', filename='bgimg.png') }}");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .chat-header img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+
+    .chat-header h5 {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .chat-message {
+      margin-bottom: 15px;
+    }
+
+    .chat-message.user {
+      text-align: right;
+    }
+
+    .chat-message.user .message {
+      background-color: #0d6efd;
+      color: white;
+    }
+
+    .chat-message.assistant .message {
+      background-color: #e9ecef;
+      color: #333;
+    }
+
+    .message {
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 20px;
+      max-width: 80%;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+      padding: 10px;
+      background-color: #fff;
+    }
+
+    .chat-input input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 10px;
+      border-radius: 20px;
+      background-color: #f1f1f1;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <img src="{{ url_for('static', filename='botpfp.png') }}" alt="Bot Profile Picture" />
+      <h5>Medinova</h5>
+    </div>
+
+    
+    <div id="chatMessages" class="chat-messages"></div>
+
+    <form id="chatForm" class="chat-input">
+      <input type="text" id="chatInput" placeholder="Ask about your resume..." required />
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatMessages = document.getElementById("chatMessages");
+
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMessage = chatInput.value.trim();
+      if (!userMessage) return;
+
+      appendMessage("user", userMessage);
+      chatInput.value = "";
+
+      appendMessage("assistant", "Thinking...");
+
+      const response = await fetch("/get", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({ msg: userMessage })
+      });
+
+      const data = await response.json();
+      updateLastAssistantMessage(data.reply);
+    });
+
+    function appendMessage(sender, text) {
+      const div = document.createElement("div");
+      div.className = `chat-message ${sender}`;
+      div.innerHTML = `<div class="message">${text}</div>`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updateLastAssistantMessage(text) {
+      const assistantMessages = document.querySelectorAll(".chat-message.assistant .message");
+      const last = assistantMessages[assistantMessages.length - 1];
+      if (last) last.textContent = text;
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+  appendMessage("assistant", "Hello, I’m Medinova. How may I help you today?");
+});
+  </script>
+
+</body>
+</html>
